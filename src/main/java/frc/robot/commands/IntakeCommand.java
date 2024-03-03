@@ -15,7 +15,7 @@ public class IntakeCommand extends Command {
     public IntakeCommand(Intake intake,double inputPower) {
         m_intake = intake;
         m_inputPower = inputPower;
-        System.out.println("Intake Object Constructed");
+        //System.out.println("Intake Object Constructed");
         addRequirements(intake);
       }
     

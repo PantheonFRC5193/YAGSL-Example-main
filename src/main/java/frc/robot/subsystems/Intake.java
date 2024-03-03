@@ -3,6 +3,8 @@ import com.revrobotics.*;
 
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.*;
+import edu.wpi.first.wpilibj2.command.*;
 //import com.revrobotics.*;
 //import com.revrobotics.CANSparkMax.*;
 //import com.revrobotics.CANSparkMax.IdleMode;
@@ -62,6 +64,11 @@ public class Intake extends SubsystemBase {
 
     public void stop(){
         motor.disable();
+    }
+
+    public Command intoBot(DoubleSupplier power){
+        return run(() -> setPower(power.getAsDouble()));
+
     }
 
 

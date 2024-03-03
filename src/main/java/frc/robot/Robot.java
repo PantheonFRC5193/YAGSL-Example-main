@@ -128,40 +128,38 @@ public class Robot extends TimedRobot
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
-    shooterCommand = m_robotContainer.getShooterCommand();
-    pivotCommand = m_robotContainer.getPivotCommandUp();
-    elevatorCommand = m_robotContainer.getElevatorCommand();
-    intakeCommand = m_robotContainer.getIntakeCommand();
-
+    //shooterCommand = m_robotContainer.getShooterCommand();
+    //pivotCommand = m_robotContainer.getPivotCommandUp();
+    //elevatorCommand = m_robotContainer.getElevatorCommand();
+    //intakeCommand = m_robotContainer.getIntakeCommand();
 
     if (m_autonomousCommand != null)
     {
-      m_autonomousCommand.cancel();
+      //m_autonomousCommand.cancel();
     }
 
-    if (shooterCommand != null)
-    {
-      shooterCommand.schedule();
-    }
+    //if (shooterCommand != null)
+    //{
+      //shooterCommand.schedule();
+    //}
 
-    if (pivotCommand != null)
-    {
-      shooterCommand.schedule();
-    }
+    //if (pivotCommand != null)
+    //{
+      //pivotCommand.schedule();
+    //}
 
-    if (elevatorCommand != null)
-    {
-      shooterCommand.schedule();
-    }
+    //if (elevatorCommand != null)
+    //{
+      //elevatorCommand.schedule();
+    //}
 
-    if (intakeCommand != null)
-    {
-      shooterCommand.schedule();
-    }
+    //if (intakeCommand != null)
+    //{
+      //intakeCommand.schedule();
+    //}
 
-
-    m_robotContainer.setDriveMode();
-    m_robotContainer.setMotorBrake(true);
+    //m_robotContainer.setDriveMode();
+    //m_robotContainer.setMotorBrake(false);
   }
 
   /**
