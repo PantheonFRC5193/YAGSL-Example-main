@@ -158,7 +158,7 @@ public class RobotContainer
     //controller.rightBumper().onTrue(Commands.runOnce(()->new PivotCommandUp(pivot),pivot));
     //controller.leftBumper().onTrue(Commands.runOnce(()->new PivotCommandDown(pivot),pivot));
 
-    //D-pad bindings for pivot that run when both limit switches are not switched
+    //Directional-pad bindings for pivot that run when both limit switches are not switched
 
     controller.povLeft()
     .and(()-> {return !pivot.getLimit1();})
@@ -175,21 +175,21 @@ public class RobotContainer
 
     controller.leftTrigger(0.3)
     .and(()->{return !controller.leftBumper().getAsBoolean();})
-                                    .whileTrue(Commands.run(()->shooter.setPower(controller.getLeftTriggerAxis())));
+                                    .whileTrue(Commands.run(()->shooter.setPower(controller.getLeftTriggerAxis()),shooter));
 
     controller.rightTrigger(0.3)
     .and(()->{return !controller.rightBumper().getAsBoolean();})
-                                    .whileTrue(Commands.run(()->shooter.setPower(controller.getRightTriggerAxis())));
+                                    .whileTrue(Commands.run(()->shooter.setPower(controller.getRightTriggerAxis()),shooter));
    
 
     //Triggers reverse shooter and intake while bumpers are pressed
     controller.rightBumper()
     .and(()->{return controller.getRightTriggerAxis() >=0.3;})
-                                            .whileTrue(Commands.run(()->shooter.setPower(-controller.getRightTriggerAxis())));
+                                            .whileTrue(Commands.run(()->shooter.setPower(-controller.getRightTriggerAxis()),shooter));
 
     controller.leftBumper()
     .and(()->{return controller.getLeftTriggerAxis() >= 0.3;})
-                                            .whileTrue(Commands.run(()->intake.setPower(-controller.getLeftTriggerAxis())));
+                                            .whileTrue(Commands.run(()->intake.setPower(-controller.getLeftTriggerAxis()),shooter));
                                                 
 
     // driverXbox.x().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
@@ -197,7 +197,7 @@ public class RobotContainer
 
     //y button activates the elevator to a fixed number of rotations 
     //Measure encoder values for precise positioning
-    
+
     //controller.y().onTrue(Commands.runOnce(()->{elevator.setPosition(5);}));
   }
 
