@@ -52,5 +52,10 @@ public class Elevator extends SubsystemBase {
     public boolean getLimit(){
         return limit.get();
     }
+
+    //public Command fullExtend(){
+
+        //return runOnce(() -> { } );
+    //}
     
 }

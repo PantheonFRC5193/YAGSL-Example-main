@@ -20,16 +20,22 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 //import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.swervedrive.drivebase.AbsoluteDriveAdv;
-import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.Pivot;
-import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.swervedrive.SwerveSubsystem;
 import java.io.File;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import frc.robot.commands.*;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+
 //import edu.wpi.first.wpilibj2.command.button.*;
 //import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -59,8 +65,10 @@ public class RobotContainer
 
    private final Shooter shooter = new Shooter();
     private final Intake intake = new Intake();
-    //private final Elevator elevator = new Elevator();
+    private final Elevator elevator = new Elevator();
     private final Pivot pivot = new Pivot();
+    private final Limelight limelight = new Limelight();
+
 
     //private final Command intakeCommand;
     //private final Command pivotCommandU;
@@ -77,6 +85,14 @@ public class RobotContainer
     BooleanSupplier xSupplier = () -> controller.x().getAsBoolean();
     BooleanSupplier ySupplier = () -> controller.y().getAsBoolean();
 
+    //private SequentialCommandGroup pivotForward;
+    //private SequentialCommandGroup pivotBack;
+
+    //private ParallelDeadlineGroup pivotForward;
+    //private ParallelDeadlineGroup pivotBack;
+
+    private SequentialCommandGroup shootForwardProgressive;
+    SendableChooser<Command> autoChooser = new SendableChooser<>(); // auton: path-plannar
 
 
     //DoubleSupplier leftYSupplier = () -> -MathUtil.applyDeadband(controller.getHID().getLeftY(),controller.getHID().LEFT_Y_DEADBAND)
@@ -86,9 +102,11 @@ public class RobotContainer
    */
   public RobotContainer()
   {
-    // Configure the trigger bindings
+
+    autoChooser = AutoBuilder.buildAutoChooser("New Auto"); // auton: path-plannar
 
 
+ 
     //Instantiate command objects
     //intakeCommand = new IntakeCommand(intake,0.0);
     System.out.println("Intake Command Initialized");
@@ -141,23 +159,45 @@ public class RobotContainer
         () -> controller.getRawAxis(2));
 
     //Intake and shooter commmands
+
+
     Command shootForward = shooter.shootForward(() -> controller.getRightTriggerAxis());
     //Command shootForwardHalf = shooter.shootForward();
     //Command shootBackward = shooter.shootForward(()-> -1*controller.getRightTriggerAxis());
 
-    Command intakeForward = intake.intoBot(() -> controller.getLeftTriggerAxis());
+    Command intakeForward = intake.intoBot(() -> controller.getLeftTriggerAxis());//.until(()->{return !intake.getLight();}),intake.setPositionDiff(-1));
+    
     //Command intakeBackward = intake.intoBot(() -> -1*controller.getLeftTriggerAxis());
     
-    configureBindings();
+
+    //SequentialCommandGroup shootForwardProgressive = new SequentialCommandGroup(shooter.shootForward(()->controller.getRightTriggerAxis()*0.25),shooter.shootForward(()->controller.getRightTriggerAxis()*0.5),shooter.shootForward(()->controller.getRightTriggerAxis()*0.75),shooter.shootForward(()->controller.getRightTriggerAxis()));
+
+
+    //Command runPivot = pivot.test();
+
+    //Shooter & Intake Default commands
 
     shooter.setDefaultCommand(shootForward);
     intake.setDefaultCommand(intakeForward);
+    //shooter.setDefaultCommand(shootForwardProgressive);
 
-    //pivot.setDefaultCommand(pivotDown);
 
+
+    //pivotForward = new SequentialCommandGroup(pivot.pivotForward(),pivot.setPowerCommand(0.0));
+    //pivotBack = new SequentialCommandGroup(pivot.pivotBack(),pivot.setPowerCommand(0.0));
+
+    //pivotForward = new ParallelDeadlineGroup(pivot.pivotForward(),pivot.checkLimitSwitches());
+    //pivotBack = new ParallelDeadlineGroup(pivot.pivotBack(),pivot.checkLimitSwitches());
+
+
+
+    //pivot.setDefaultCommand(pivot.checkLimitSwitches());
 
     drivebase.setDefaultCommand(
         !RobotBase.isSimulation() ? driveFieldOrientedDirectAngle : driveFieldOrientedDirectAngleSim);
+
+    // Configure the trigger bindings
+        configureBindings();
 
   }
 
@@ -174,12 +214,12 @@ public class RobotContainer
 
     //Button commands for driving options
 
-    //controller.a().onTrue((Commands.runOnce(drivebase::zeroGyro)));
-    //controller.x().onTrue(Commands.runOnce(drivebase::addFakeVisionReading));
-    //controller.b().whileTrue(
-        //Commands.deferredProxy(() -> drivebase.driveToPose(
-                                   //new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0)))
-                              //));
+    controller.a().onTrue((Commands.runOnce(drivebase::zeroGyro)));
+    controller.x().onTrue(Commands.runOnce(drivebase::addFakeVisionReading));
+    controller.b().whileTrue(
+        Commands.deferredProxy(() -> drivebase.driveToPose(
+                                   new Pose2d(new Translation2d(4, 4), Rotation2d.fromDegrees(0)))
+                              ));
     // driverXbox.x().whileTrue(Commands.runOnce(drivebase::lock, drivebase).repeatedly());
 
     //Bumper bindings for pivot
@@ -188,10 +228,49 @@ public class RobotContainer
 
     //Directional-pad bindings for pivot that run when both limit switches are not switched
 
-    controller.x().toggleOnTrue(pivot.pivotForward());
-    controller.b().toggleOnTrue(pivot.pivotBack());
+    //controller.x().toggleOnTrue(pivot.pivotForward());
+    //controller.b().toggleOnTrue(pivot.pivotBack());
+
+    // Pivot Forward
+    //controller.povLeft().onTrue(pivot.setPositionCommand(0.1).until(() -> pivot.isAtPosition()));
+    controller.rightBumper().and(()->{return pivot.getBackLimit();}).whileTrue(pivot.pivotBack()).onFalse(pivot.setPowerCommand(0));
+
+    // Pivot Backward 
+    controller.leftBumper().and(()->{return pivot.getFrontLimit();}).whileTrue(pivot.pivotForward()).onFalse(pivot.setPowerCommand(0));
+    
+    //Pivot limits
+
+    //pivot.backLimitTrue().onFalse(Commands.run(()->{pivot.setPower(0);}));
+   //pivot.frontLimitTrue().onFalse(Commands.run(()->{pivot.setPower(0);}));
 
 
+    //Instant reverse when clicking left-stick
+
+   controller.leftStick().onTrue(intake.immediateReverse()).onFalse(intake.setPowerCommand(0));
+
+
+   //Pivot state positions
+
+
+   //Move to neutral/start
+   //controller.povLeft().and(()->{return pivot.getBackLimit();}).onTrue(pivot.moveToNeutral()).onFalse(pivot.setPowerCommand(0));
+
+   //Move to shooting
+  //controller.povUp().onTrue(pivot.moveToShoot()).onFalse(pivot.setPowerCommand(0)).onFalse(pivot.setPowerCommand(0));
+
+    //Move to ground
+   //controller.povRight().and(()->{return pivot.getFrontLimit();}).onTrue(pivot.moveToGround()).onFalse(pivot.setPowerCommand(0));
+
+    //controller.
+
+    // SERVO COMMAND __
+  controller.rightStick().onTrue(limelight.servoSwitch());
+
+  
+  
+    //controller.povRight().onTrue(pivot.setPositionCommand(0.1).until(() -> pivot.isAtPosition()));
+
+ 
     //Trigger buttons bound to intake and shooter forward motion when bumpers are not pressed
 
     //controller.leftTrigger(0.3).and(()->{return !controller.leftBumper().getAsBoolean();}).whileTrue(Commands.run(()->intake.setPower(controller.getLeftTriggerAxis()),intake));
@@ -208,9 +287,9 @@ public class RobotContainer
     //Two Button Trigger RB and RT
     //For reversing the shooter
 
-    TwoButtonTrigger reverseToggleShooter = new TwoButtonTrigger(controller.rightBumper(),controller.rightTrigger(0.1));
+  //  TwoButtonTrigger reverseToggleShooter = new TwoButtonTrigger(controller.rightBumper(),controller.rightTrigger(0.1));
 
-    reverseToggleShooter.get().whileTrue(shooter.shootForward(() -> -1*controller.getRightTriggerAxis() ));
+    // reverseToggleShooter.get().whileTrue(shooter.shootForward(() -> -1*controller.getRightTriggerAxis() ));
 
 
     //Two button Trigger LB and LT
@@ -238,11 +317,7 @@ public class RobotContainer
    *
    * @return the command to run in autonomous
    */
-  public Command getAutonomousCommand()
-  {
-    // An example command will be run in autonomous
-    return drivebase.getAutonomousCommand("New Auto");
-  }
+ 
 
   public void setDriveMode()
   {
@@ -262,6 +337,16 @@ public SwerveSubsystem getSwerveSystem(){
 public CommandXboxController getController(){
 
     return controller;
+}
+
+// Auton stuff for Path Plannar
+public Command getAutonomousCommand() {
+    return autoChooser.getSelected();
+}
+
+// Auton stuff for Path Plannar
+public Command BlueAuton(){
+    return new PathPlannerAuto("Sampled Auton");
 }
 
 public Subsystem getIntakeSystem()
